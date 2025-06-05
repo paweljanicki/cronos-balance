@@ -1,0 +1,28 @@
+# Build output
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Package files
+package-lock.json
+yarn.lock
+
+# Logs
+*.log
+
+# Environment variables
+.env*
+
+# Coverage directory
+coverage/
+
+# Cache
+.cache/
+.npm/
+.eslintcache
+
+# Misc
+.DS_Store
+Thumbs.db 
