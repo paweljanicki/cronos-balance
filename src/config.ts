@@ -16,6 +16,13 @@ export const config = {
   auth: {
     apiKeys: (process.env.API_KEYS || '').split(',').map(key => key.trim()),
   },
+  redis: {
+    username: process.env.REDIS_USERNAME || 'default',
+    password: process.env.REDIS_PASSWORD || '',
+    host: process.env.REDIS_HOST || '',
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    ttl: parseInt(process.env.REDIS_TTL || '300', 10),
+  },
 } as const;
 
 // Type for the config object
