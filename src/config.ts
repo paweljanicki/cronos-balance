@@ -13,6 +13,9 @@ export const config = {
   cronos: {
     apiKey: process.env.CRONOS_EXPLORER_API_KEY || '',
   },
+  auth: {
+    apiKeys: (process.env.API_KEYS || '').split(',').map(key => key.trim()),
+  },
 } as const;
 
 // Type for the config object
