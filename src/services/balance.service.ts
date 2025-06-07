@@ -1,5 +1,6 @@
 import { Token } from '@crypto.com/developer-platform-client';
 import { getCache, setCache, generateCacheKey } from '../utils/cache';
+import { withRetry, RPCError } from '../utils/cronos';
 
 export const getCronosBalanceForWalletAddress = async (address: string): Promise<string> => {
   try {
@@ -11,19 +12,25 @@ export const getCronosBalanceForWalletAddress = async (address: string): Promise
       return cachedBalance;
     }
 
-    // If not in cache, fetch from API
-    const response = await Token.getNativeTokenBalance(address);
+    // If not in cache, fetch from API with retry
+    const response = await withRetry(async () => {
+      const result = await Token.getNativeTokenBalance(address);
+      console.log('result', result);
+      if (result.status !== 'Success' || !result.data) {
+        throw new RPCError('Failed to get native token balance', 'API_ERROR');
+      }
+      return result;
+    });
 
-    if (response.status === 'Success' && response.data) {
-      // Cache the result
-      await setCache(cacheKey, response.data.balance);
-      return response.data.balance;
-    } else {
-      throw new Error();
-    }
+    // Cache the result
+    await setCache(cacheKey, response.data.balance);
+    return response.data.balance;
   } catch (error) {
-    console.error(error);
-    throw new Error('Failed to get cronos balance');
+    if (error instanceof RPCError) {
+      throw error;
+    }
+    console.error('Unexpected error:', error);
+    throw new RPCError('Failed to get cronos balance', 'UNKNOWN_ERROR');
   }
 };
 
@@ -43,19 +50,24 @@ export const getCrc20BalanceForWalletAddress = async ({
       return cachedBalance;
     }
 
-    // If not in cache, fetch from API
-    const response = await Token.getERC20TokenBalance(walletAddress, tokenAddress);
+    // If not in cache, fetch from API with retry
+    const response = await withRetry(async () => {
+      const result = await Token.getERC20TokenBalance(walletAddress, tokenAddress);
+      if (result.status !== 'Success' || !result.data) {
+        throw new RPCError('Failed to get ERC20 token balance', 'API_ERROR');
+      }
+      return result;
+    });
 
-    if (response.status === 'Success' && response.data) {
-      // Cache the result
-      await setCache(cacheKey, response.data.tokenBalance);
-      return response.data.tokenBalance;
-    } else {
-      throw new Error();
-    }
+    // Cache the result
+    await setCache(cacheKey, response.data.tokenBalance);
+    return response.data.tokenBalance;
   } catch (error) {
-    console.error(error);
-    throw new Error('Failed to get crc20 balance');
+    if (error instanceof RPCError) {
+      throw error;
+    }
+    console.error('Unexpected error:', error);
+    throw new RPCError('Failed to get crc20 balance', 'UNKNOWN_ERROR');
   }
 };
 
