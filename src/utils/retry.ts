@@ -35,7 +35,7 @@ const NON_RETRYABLE_ERROR_PATTERNS = [
 /**
  * Determines if an error should trigger a retry
  */
-const shouldRetry = (error: unknown): boolean => {
+export const shouldRetry = (error: unknown): boolean => {
   if (!(error instanceof Error)) {
     return false;
   }
