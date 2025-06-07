@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { ValidationError } from '../utils/errors';
+import { handleControllerError } from '../utils/error-handler';
 
 export const ethereumAddressSchema = z
   .string()
@@ -16,10 +17,15 @@ export const validateEthereumAddress = (paramName: string) => {
       next();
     } catch (error) {
       if (error instanceof z.ZodError) {
-        next(new ValidationError('Invalid Ethereum address format', 'INVALID_ETHEREUM_ADDRESS'));
+        handleControllerError(
+          new ValidationError('Invalid Ethereum address format', 'INVALID_ETHEREUM_ADDRESS'),
+          res,
+          next,
+          'validateEthereumAddress'
+        );
         return;
       }
-      next(error);
+      handleControllerError(error, res, next, 'validateEthereumAddress');
     }
   };
 };

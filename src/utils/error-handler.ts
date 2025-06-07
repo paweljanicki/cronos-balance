@@ -1,5 +1,12 @@
 import { Response, NextFunction } from 'express';
-import { AppError, ExternalAPIError, NetworkError, ValidationError, CacheError } from './errors';
+import {
+  AppError,
+  ExternalAPIError,
+  NetworkError,
+  ValidationError,
+  CacheError,
+  AuthError,
+} from './errors';
 
 /**
  * Maps error types to appropriate HTTP status codes
@@ -28,6 +35,10 @@ export const getStatusCode = (error: AppError): number => {
 
   if (error instanceof CacheError) {
     return 503; // Service Unavailable
+  }
+
+  if (error instanceof AuthError) {
+    return 401; // Unauthorized
   }
 
   return 500; // Internal Server Error
