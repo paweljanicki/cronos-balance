@@ -1,8 +1,8 @@
-import app from './src/app';
-import { config } from './src/config';
-import { initializeCronosSDK } from './src/utils/cronos';
-import { initializeRedis } from './src/utils/redis';
-import { ExternalAPIError } from './src/utils/errors';
+import app from './app';
+import { config } from './config';
+import { initializeCronosSDK } from './utils/cronos';
+import { initializeRedis } from './utils/redis';
+import { ExternalAPIError } from './utils/errors';
 
 const initializeServices = async () => {
   initializeCronosSDK();

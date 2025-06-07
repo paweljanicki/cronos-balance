@@ -4,7 +4,10 @@ import { ExternalAPIError, NetworkError } from '../utils/errors';
 import { withRetry } from '../utils/retry';
 
 /**
- * Validates the API response and extracts the balance
+ * Validates the API response and extracts the balance.
+ * @param {any} result - The API response object
+ * @returns {string} The extracted balance value
+ * @throws {ExternalAPIError} If the response doesn't match the expected format or if the API indicates a failure
  */
 const validateAndExtractBalance = (result: any): string => {
   if (result.status !== 'Success' || !result.data) {
@@ -14,7 +17,10 @@ const validateAndExtractBalance = (result: any): string => {
 };
 
 /**
- * Validates the API response and extracts the token balance
+ * Validates the API response and extracts the token balance.
+ * @param {any} result - The API response object
+ * @returns {string} The extracted token balance value
+ * @throws {ExternalAPIError} If the response doesn't match the expected format or if the API indicates a failure
  */
 const validateAndExtractTokenBalance = (result: any): string => {
   if (result.status !== 'Success' || !result.data) {
@@ -24,7 +30,18 @@ const validateAndExtractTokenBalance = (result: any): string => {
 };
 
 /**
- * Get the native token balance for a wallet address
+ * Get the native token balance for a wallet address.
+ *
+ * This function implements a caching strategy to reduce API calls:
+ * 1. First checks Redis cache for existing balance
+ * 2. If cached, returns immediately
+ * 3. If not cached, calls the Cronos API with retry logic
+ * 4. Caches the result before returning
+ *
+ * @param {string} address - The wallet address to check balance for
+ * @returns {Promise<string>} The native token balance
+ * @throws {ExternalAPIError} When API returns an error or invalid response
+ * @throws {NetworkError} When network-related issues occur
  */
 export const getCronosBalanceForWalletAddress = async (address: string): Promise<string> => {
   try {
@@ -44,16 +61,32 @@ export const getCronosBalanceForWalletAddress = async (address: string): Promise
     await setCache(cacheKey, balance);
     return balance;
   } catch (error) {
-    if (error instanceof ExternalAPIError || error instanceof NetworkError) {
+    // Simplify error message to avoid exposing too much information to the client
+    if (error instanceof ExternalAPIError) {
       throw new ExternalAPIError('Failed to get cronos balance');
+    } else if (error instanceof NetworkError) {
+      throw new NetworkError('Failed to get cronos balance');
     }
-    console.error('Unexpected error:', error);
+
     throw new ExternalAPIError('Failed to get cronos balance', 'UNKNOWN_ERROR');
   }
 };
 
 /**
- * Get the ERC20 token balance for a wallet address
+ * Get the ERC20 token balance for a wallet address.
+ *
+ * This function implements a caching strategy to reduce API calls:
+ * 1. First checks Redis cache for existing balance
+ * 2. If cached, returns immediately
+ * 3. If not cached, calls the Cronos API with retry logic
+ * 4. Caches the result before returning
+ *
+ * @param {Object} params - The parameters object
+ * @param {string} params.walletAddress - The wallet address to check balance for
+ * @param {string} params.tokenAddress - The ERC20 token contract address
+ * @returns {Promise<string>} The ERC20 token balance
+ * @throws {ExternalAPIError} When API returns an error or invalid response
+ * @throws {NetworkError} When network-related issues occur
  */
 export const getCrc20BalanceForWalletAddress = async ({
   walletAddress,
@@ -79,12 +112,13 @@ export const getCrc20BalanceForWalletAddress = async ({
     await setCache(cacheKey, balance);
     return balance;
   } catch (error) {
-    if (error instanceof ExternalAPIError || error instanceof NetworkError) {
+    // Simplify error message to avoid exposing too much information to the client
+    if (error instanceof ExternalAPIError) {
       throw new ExternalAPIError('Failed to get crc20 balance');
+    } else if (error instanceof NetworkError) {
+      throw new NetworkError('Failed to get crc20 balance');
     }
-    console.error('Unexpected error:', error);
+
     throw new ExternalAPIError('Failed to get crc20 balance', 'UNKNOWN_ERROR');
   }
 };
-
-// 0xA897312A1882dBb79827dB2C5E0abAb438f38C6F 0x66e428c3f67a68878562e79a0234c1f83c208770
