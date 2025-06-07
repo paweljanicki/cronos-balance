@@ -1,7 +1,31 @@
 import { Token } from '@crypto.com/developer-platform-client';
 import { getCache, setCache, generateCacheKey } from '../utils/cache';
-import { withRetry, RPCError } from '../utils/cronos';
+import { ExternalAPIError, NetworkError } from '../utils/errors';
+import { withRetry } from '../utils/retry';
 
+/**
+ * Validates the API response and extracts the balance
+ */
+const validateAndExtractBalance = (result: any): string => {
+  if (result.status !== 'Success' || !result.data) {
+    throw new ExternalAPIError('Failed to get native token balance');
+  }
+  return result.data.balance;
+};
+
+/**
+ * Validates the API response and extracts the token balance
+ */
+const validateAndExtractTokenBalance = (result: any): string => {
+  if (result.status !== 'Success' || !result.data) {
+    throw new ExternalAPIError('Failed to get ERC20 token balance');
+  }
+  return result.data.tokenBalance;
+};
+
+/**
+ * Get the native token balance for a wallet address
+ */
 export const getCronosBalanceForWalletAddress = async (address: string): Promise<string> => {
   try {
     // Try to get from cache first
@@ -13,27 +37,24 @@ export const getCronosBalanceForWalletAddress = async (address: string): Promise
     }
 
     // If not in cache, fetch from API with retry
-    const response = await withRetry(async () => {
-      const result = await Token.getNativeTokenBalance(address);
-      console.log('result', result);
-      if (result.status !== 'Success' || !result.data) {
-        throw new RPCError('Failed to get native token balance', 'API_ERROR');
-      }
-      return result;
-    });
+    const result = await withRetry(() => Token.getNativeTokenBalance(address));
+    const balance = validateAndExtractBalance(result);
 
     // Cache the result
-    await setCache(cacheKey, response.data.balance);
-    return response.data.balance;
+    await setCache(cacheKey, balance);
+    return balance;
   } catch (error) {
-    if (error instanceof RPCError) {
-      throw error;
+    if (error instanceof ExternalAPIError || error instanceof NetworkError) {
+      throw new ExternalAPIError('Failed to get cronos balance');
     }
     console.error('Unexpected error:', error);
-    throw new RPCError('Failed to get cronos balance', 'UNKNOWN_ERROR');
+    throw new ExternalAPIError('Failed to get cronos balance', 'UNKNOWN_ERROR');
   }
 };
 
+/**
+ * Get the ERC20 token balance for a wallet address
+ */
 export const getCrc20BalanceForWalletAddress = async ({
   walletAddress,
   tokenAddress,
@@ -51,23 +72,18 @@ export const getCrc20BalanceForWalletAddress = async ({
     }
 
     // If not in cache, fetch from API with retry
-    const response = await withRetry(async () => {
-      const result = await Token.getERC20TokenBalance(walletAddress, tokenAddress);
-      if (result.status !== 'Success' || !result.data) {
-        throw new RPCError('Failed to get ERC20 token balance', 'API_ERROR');
-      }
-      return result;
-    });
+    const result = await withRetry(() => Token.getERC20TokenBalance(walletAddress, tokenAddress));
+    const balance = validateAndExtractTokenBalance(result);
 
     // Cache the result
-    await setCache(cacheKey, response.data.tokenBalance);
-    return response.data.tokenBalance;
+    await setCache(cacheKey, balance);
+    return balance;
   } catch (error) {
-    if (error instanceof RPCError) {
-      throw error;
+    if (error instanceof ExternalAPIError || error instanceof NetworkError) {
+      throw new ExternalAPIError('Failed to get crc20 balance');
     }
     console.error('Unexpected error:', error);
-    throw new RPCError('Failed to get crc20 balance', 'UNKNOWN_ERROR');
+    throw new ExternalAPIError('Failed to get crc20 balance', 'UNKNOWN_ERROR');
   }
 };
 

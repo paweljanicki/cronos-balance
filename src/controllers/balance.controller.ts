@@ -1,33 +1,22 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import {
   getCronosBalanceForWalletAddress,
   getCrc20BalanceForWalletAddress,
 } from '../services/balance.service';
-import { RPCError } from '../utils/cronos';
+import { handleControllerError } from '../utils/error-handler';
 
-export const getCronosBalance = async (req: Request, res: Response) => {
+export const getCronosBalance = async (req: Request, res: Response, next: NextFunction) => {
   const { address } = req.params;
 
   try {
     const balance = await getCronosBalanceForWalletAddress(address);
     res.json({ balance });
   } catch (error) {
-    if (error instanceof RPCError) {
-      const statusCode = error.code === 'API_ERROR' ? 502 : 500;
-      res.status(statusCode).json({
-        error: error.message,
-        code: error.code,
-      });
-      return;
-    }
-    res.status(500).json({
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR',
-    });
+    handleControllerError(error, res, next, 'getCronosBalance');
   }
 };
 
-export const getCrc20Balance = async (req: Request, res: Response) => {
+export const getCrc20Balance = async (req: Request, res: Response, next: NextFunction) => {
   const { address: walletAddress, tokenAddress } = req.params;
 
   try {
@@ -37,17 +26,6 @@ export const getCrc20Balance = async (req: Request, res: Response) => {
     });
     res.json({ balance });
   } catch (error) {
-    if (error instanceof RPCError) {
-      const statusCode = error.code === 'API_ERROR' ? 502 : 500;
-      res.status(statusCode).json({
-        error: error.message,
-        code: error.code,
-      });
-      return;
-    }
-    res.status(500).json({
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR',
-    });
+    handleControllerError(error, res, next, 'getCrc20Balance');
   }
 };

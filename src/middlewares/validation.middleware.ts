@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
+import { ValidationError } from '../utils/errors';
 
 export const ethereumAddressSchema = z
   .string()
@@ -14,11 +15,8 @@ export const validateEthereumAddress = (paramName: string) => {
       ethereumAddressSchema.parse(address);
       next();
     } catch (error) {
-      console.log(error);
       if (error instanceof z.ZodError) {
-        res.status(400).json({
-          error: 'Invalid address format',
-        });
+        next(new ValidationError('Invalid Ethereum address format', 'INVALID_ETHEREUM_ADDRESS'));
         return;
       }
       next(error);
