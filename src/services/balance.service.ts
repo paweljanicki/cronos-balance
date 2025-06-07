@@ -1,6 +1,5 @@
 import { Token } from '@crypto.com/developer-platform-client';
-import { getCache, setCache, generateCacheKey } from './cache.service';
-import { CACHE_TTL } from '../utils/redis';
+import { getCache, setCache, generateCacheKey } from '../utils/cache';
 
 export const getCronosBalanceForWalletAddress = async (address: string): Promise<string> => {
   try {
@@ -17,7 +16,7 @@ export const getCronosBalanceForWalletAddress = async (address: string): Promise
 
     if (response.status === 'Success' && response.data) {
       // Cache the result
-      await setCache(cacheKey, response.data.balance, CACHE_TTL);
+      await setCache(cacheKey, response.data.balance);
       return response.data.balance;
     } else {
       throw new Error();
@@ -49,7 +48,7 @@ export const getCrc20BalanceForWalletAddress = async ({
 
     if (response.status === 'Success' && response.data) {
       // Cache the result
-      await setCache(cacheKey, response.data.tokenBalance, CACHE_TTL);
+      await setCache(cacheKey, response.data.tokenBalance);
       return response.data.tokenBalance;
     } else {
       throw new Error();

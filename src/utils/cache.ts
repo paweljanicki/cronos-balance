@@ -1,4 +1,4 @@
-import { redisClient, CACHE_TTL } from '../utils/redis';
+import { redisClient, CACHE_TTL } from './redis';
 
 export const getCache = async <T>(key: string): Promise<T | null> => {
   try {

@@ -27,6 +27,7 @@
     "@types/dotenv": "^6.1.1",
     "dotenv": "^16.5.0",
     "express-rate-limit": "^7.5.0",
-    "redis": "^5.5.5"
+    "redis": "^5.5.5",
+    "zod": "^3.25.55"
   }
 }
