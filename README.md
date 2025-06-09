@@ -12,7 +12,7 @@ A Node.js API service that provides balance information for Cronos blockchain ad
 
 ## Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js (v22 or higher)
 - Redis server (local or cloud-based)
 - Cronos Explorer API key (get it from [Cronos Explorer](https://explorer-api-doc.cronos.org/mainnet/))
 
@@ -76,6 +76,27 @@ To start the server in production mode:
 
 ```bash
 npm start
+```
+
+## Running with Docker
+
+This starts the app in the production mode and is not intended to be used for development
+
+### Prerequisites
+
+- Docker installed on your system
+- `.env` file configured with all required environment variables
+
+### Building the Docker Image
+
+```bash
+docker build -t cronos-balance .
+```
+
+### Running the Container
+
+```bash
+docker run -p 3000:3000 --env-file .env cronos-balance
 ```
 
 ## Testing
